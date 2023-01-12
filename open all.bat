@@ -1,4 +1,5 @@
 cd %cd%
+cmder /start "C:\Users\Juca\Desktop\App para estudo React + Node  + PGSql\backend"
+cmder /start "C:\Users\Juca\Desktop\App para estudo React + Node  + PGSql\frontend"
+
 code .
-start cmd /k cd "C:\Users\Juca\Desktop\App NodeJS GPT3\backend"
-start cmd /k cd "C:\Users\Juca\Desktop\App NodeJS GPT3\frontend"

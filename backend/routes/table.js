@@ -5,6 +5,16 @@ const router = express.Router();
 
 const signs = [`=`,`!=`,`<`,`>`,`LIKE`];
 
+// Get all tables column names and informations
+router.get('/infos', (req, res, next) => {
+    client.query("SELECT tablename as name FROM pg_tables WHERE schemaname = 'public'",
+        (err, result) => {
+            if (err) next(err);
+            res.send(result.rows);
+        }
+    );
+});
+
 // Get table column names and informations
 router.get('/infos/:name', (req, res, next) => {
     const { name } = req.params;

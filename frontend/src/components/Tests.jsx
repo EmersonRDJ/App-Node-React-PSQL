@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from 'react'
 import { DragDropContext, Draggable } from 'react-beautiful-dnd';
+import { useSelector, useDispatch } from 'react-redux'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons'
 
 import { useFetch } from '../hooks/useFetch';
 
+// import { changeData } from '../store/redux/slices/tableContentSlice'
 
 const Tests = props => {
+    const dispatch = useDispatch(); 
+
     const [tableHeader, setTableHeader] = useState({ data: null, loading: true, error: null })
     const [response, setResponse] = useState({ data: null, loading: true, error: null })
 
     const [currDir, setCurrDir] = useState(`asc`)
     const [currProp, setCurrProp] = useState(`id`)
     const [openForm, setOpenForm] = useState(false)
+
+    const tableContent = useSelector(state => state.tableContent)
     
     const tableHeaderData = useFetch({ url:`http://localhost:8088/table/infos/${props.tableName}/`, method:'GET'});
     const responseData = useFetch({ url:`http://localhost:8088/table/${props.tableName}/`, method:'GET' });
 
     useEffect(() => {
+        dispatch(changeData(useFetch({ url:`http://localhost:8088/table/${props.tableName}/`, method:'GET' })))
         setTableHeader(tableHeaderData);
         setResponse(responseData);
     }, [tableHeaderData, responseData]);
