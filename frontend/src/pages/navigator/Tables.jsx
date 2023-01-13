@@ -24,7 +24,7 @@ const Tables = props => {
     return(
         <div className="bg-gradient-to-r w-full from-slate-300 to-slate-500 h-screen flex flex-col justify-center items-center ">
             { !tables.loading && !tables.error ?
-            <div className="bg-slate-400 w-4/6 h-5/6 pt-8">
+            <div className="bg-slate-400 w-4/6 h-5/6 pt-8 overflow-auto scrollbar scrollbar-track-slate-300 scrollbar-thumb-slate-700">
                 { tables.data.map((table) => (
                     <Link key={table.name} href={`/navigator/Table`} onClick={() => props.setNavigation({tables: false, table: true})}>
                         <li key={table.name} className="list-none">
