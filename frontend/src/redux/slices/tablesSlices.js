@@ -18,7 +18,7 @@ const tablesSlice = createSlice({
 
 export const { setData, setLoading, setError } = tablesSlice.actions;
 
-export const fetchTablessData = (param) => async (dispatch) => {
+export const fetchTablesData = (param) => async (dispatch) => {
   try {
     const res = await fetch(`${global.backendUrl}/table/infos/`, { method: 'GET' });
     const data = await res.json();

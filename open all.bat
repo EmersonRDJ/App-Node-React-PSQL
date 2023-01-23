@@ -1,5 +1,5 @@
 cd %cd%
-cmder /start "C:\Users\Juca\Desktop\App para estudo React + Node  + PGSql\backend"
-cmder /start "C:\Users\Juca\Desktop\App para estudo React + Node  + PGSql\frontend"
+cmder /start "C:\Users\emers\Desktop\App-Node-React-PSQL\backend"
+cmder /start "C:\Users\emers\Desktop\App-Node-React-PSQL\frontend"
 
 code .

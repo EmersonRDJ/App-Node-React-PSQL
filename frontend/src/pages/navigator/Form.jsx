@@ -5,7 +5,7 @@ import CurrencyInput from 'react-currency-input-field';
 
 
 const Form = props => {
-    const [form, setForm] = useState(props.header.map(e => e.name).reduce((acc, cur) => {
+    const [form, setForm] = useState(props.rawForm || props.header.map(e => e.name).reduce((acc, cur) => {
             acc[cur]=''
             return acc
         },{}))
@@ -17,8 +17,8 @@ const Form = props => {
     };
 
     function handleSubmit() {
-        fetch(`http://localhost:8088/table/${props.tableName}/`, {
-            method: 'POST',
+        fetch( !props.rawForm ? `http://localhost:8088/table/${props.tableName}/` : `http://localhost:8088/table/${props.tableName}/${props.rawForm.id || props.rawForm.ddmidy}` , {
+            method: !props.rawForm ? 'POST' : 'PUT' ,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -35,27 +35,26 @@ const Form = props => {
             props.reloadTable();
         })
         .catch(e => {
-            alert(`Erro na requisição`)
             console.log(e)
         })
     }
 
     return(
-        <div className="flex flex-col px-4 bg-slate-400 border-2 border-slate-500 rounded-xl w-4/6 h-5/6">
-            <FontAwesomeIcon onClick={() => props.setOpenForm(false)} className='text-lg ml-auto mt-3 text-slate-700 cursor-pointer rounded-lg bg-slate-300 border-2 border-slate-900 px-2 py-1 hover:bg-slate-700 hover:text-slate-300' icon={faX} />
+        <div className="flex flex-col px-4 bg-slate-400 border-2 border-slate-500 rounded-xl w-5/6 h-fit">
+            <FontAwesomeIcon onClick={() => props.setOpenForm(false)} className='text-5xl ml-auto mt-3 text-slate-700 cursor-pointer rounded-lg bg-slate-300 border-4 border-slate-900 px-3 py-1 hover:bg-slate-700 hover:text-slate-300' icon={faX} />
             <h1 className="text-6xl font-bold self-center mb-10">New {window.stringFirstToUpper(props.tableName)}</h1>
             <div className="h-full">
-                <div className={`grid grid-cols-6 gap-4`}>
+                <form className={`grid grid-cols-6 gap-4 overflow-auto max-h-96`}>
                     {props.header.map((info) => (
-                        <div key={info.name} className={`${ info.type === 'numeric' ? `col-span-1` : `col-span-2`}`}>
+                        <div key={info.name} className={`${ info.type === 'numeric' ? `col-span-1` : `col-span-2`} max-md:col-span-6  w-full`}>
                             <div className={`flex flex-col`}>
-                                <label className='text-5xl w-fit pb-2' htmlFor={info.name}><b>{ window.stringFirstToUpper(info.name) }</b></label>
+                                <label className='xl:text-4xl text-3xl w-fit pb-2 flex overflow-hidden' htmlFor={info.name}><p className='truncate'>{ window.stringFirstToUpper(info.name) }</p></label>
                                 { info.type === 'numeric' ?
                                 <CurrencyInput
                                     name={info.name} 
                                     maxLength={info.maxchar || 50}
                                     placeholder="0"
-                                    className="bg-slate-300 rounded-lg text-4xl border-2 border-black" 
+                                    className="bg-slate-300 rounded-md xl:text-4xl text-3xl border-2 border-slate-600" 
                                     key={info.name}
                                     intlConfig={{ locale: 'BR', currency: 'BRL' }}
                                     groupSeparator=','
@@ -68,7 +67,7 @@ const Form = props => {
                                     type="text" 
                                     placeholder='' 
                                     maxLength={info.maxchar || 50}  required 
-                                    className="bg-slate-300 rounded-lg text-4xl border-2 border-black" 
+                                    className="bg-slate-300 rounded-md xl:text-4xl text-3xl border-4 border-slate-600 focus:outline-none focus:border-black focus:bg-slate-100" 
                                     key={info.name}
                                     name={info.name} 
                                     value={form[info.name]}
@@ -77,14 +76,15 @@ const Form = props => {
                             </div>
                         </div>
                     ))}
-                </div>
+                    <button type="submit" onClick={e => { e.preventDefault();  handleSubmit()}} className={
+                        `col-span-6 mt-10 text-5xl text-white bg-slate-700 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300 
+                        font-medium rounded-md px-5 py-2.5 text-center mb-2 dark:bg-slate-600 dark:hover:bg-slate-700
+                        dark:focus:ring-slate-900 border-2 border-black`}>
+                        Enviar
+                    </button>
+                </form>
             </div>
             
-            <button type="button" onClick={() => handleSubmit()} className={
-                                `mt-10 text-5xl text-white bg-slate-700 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300 
-                                font-medium rounded-md px-5 py-2.5 text-center mb-2 dark:bg-slate-600 dark:hover:bg-slate-700
-                                dark:focus:ring-slate-900 border-2 border-black`}
-            >Enviar</button>
         </div>
     )
 }

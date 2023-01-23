@@ -1,5 +1,5 @@
 // React
-import React, { useState, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 // Font Awesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,29 +9,21 @@ import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons'
 import { useSelector, useDispatch } from 'react-redux'
 
 // Redux actions
-import { fetchHeaderData } from '../redux/slices/tableHeaderSlice'
-import { fetchContentData, setData as setTableContentData } from '../redux/slices/tableContentSlice'
-
-// Other Components
-import Form from './Form'
+import { setData as setTableContentData } from '../redux/slices/tableContentSlice'
 
 const Table = props => {
-    
-    // Component state
-    const [currDir, setCurrDir] = useState(`asc`)
-    const [currProp, setCurrProp] = useState(`id`)
-    const [openForm, setOpenForm] = useState(false)
+    const tableRef = useRef(null);
 
     // Redux state
     const dispatch = useDispatch(); 
     const tableContent = useSelector(state => state.tableContent)
     const tableHeader = useSelector(state => state.tableHeader)
+    
+    // Component state
+    const [currDir, setCurrDir] = useState(`asc`)
+    const [currProp, setCurrProp] = useState(tableHeader.data[0].name)
 
-    // Fetch data and set it to the redux's state
-    useEffect(() =>{
-        dispatch(fetchHeaderData(props.tableName))
-        dispatch(fetchContentData(props.tableName))
-    }, [dispatch])
+    console.log(tableHeader.data[0].name)
 
     // Sort rows when clicking on the header property
     function sortRows({ property = currProp, direction = currDir, newTableContent = tableContent, changeDir=true }) {
@@ -64,8 +56,8 @@ const Table = props => {
                 infos.map((info) => (
                     <th onClick={() => sortRows({ property:info.name })}className={`px-2 py-4 cursor-pointer row text-left p-4 ${ currProp === info.name ? `bg-slate-500` : `bg-slate-400`}`} key={info.name}>
                         <span className="flex flex-shrink-0 row">
-                            <span className="mx-1">{ window.stringFirstToUpper(info.name) }</span>
-                            <span className="mx-1">{currProp === info.name ? <FontAwesomeIcon icon={ currDir === `asc` ? faSortDown : faSortUp }/> : <FontAwesomeIcon icon={faSort}/> }</span>
+                            <span className="mx-1 text-[2.5vh]">{ info.name }</span>
+                            <span className="mx-1 text-[2.5vh]">{currProp === info.name ? <FontAwesomeIcon icon={ currDir === `asc` ? faSortDown : faSortUp }/> : <FontAwesomeIcon icon={faSort}/> }</span>
                         </span>
                     </th>
                 ))
@@ -74,65 +66,34 @@ const Table = props => {
     }
 
     // Render table body
-    function showRows(states) {
-        if(states){
+    function showRows(contents) {
+        if(contents){
             return (
-              states.map((state, i) => (
-                <tr key={state.id} className={`${i%2 === 0 ? 'bg-slate-200' : 'bg-slate-100'} text-l`}>
+              contents.map((content, i) => (
+                <tr key={content.id} className={`${i%2 === 0 ? 'bg-slate-200' : 'bg-slate-100'} text-l h-fit`} onDoubleClick={() => {props.setForm(content); props.setOpenForm(true)}}>
                     {tableHeader.data.map((key) => (
-                        <td className="text-left p-3 max-w-screen-sm break-words" key={key.name}>{state[key.name]}</td>
+                        <td className="text-[2vh] border-b-2 border-slate-400 text-left p-3 max-w-screen-sm break-words" key={key.name}>
+                            {String(content[key.name])}
+                        </td>
                     ))}
                 </tr>
               ))
             );
         }
     }
-
-    // Reload the table body's content
-    function reloadTable() {
-        fetch(`http://localhost:8088/table/${props.tableName}/`,{ method: 'GET' })
-        .then((resp) => resp.json())
-        .then((json) => {
-            sortRows({ newTableContent:{...tableContent, data:json}, changeDir:false })
-        })
-        .catch(e => {
-            alert(`Erro na requisição`)
-            console.log(e)
-        })
-    }
-
-
+    
     return(
-        <div className="w-full h-max bg-gradient-to-r from-slate-300 to-slate-500 flex justify-center items-center">
-            <div className="w-4/5 h-screen">
-                <div className={`${openForm ? `blur` : ''}`}>
-                    <button onClick={() => setOpenForm(true)} className={`text-3xl text-slate-100 bg-slate-700 hover:bg-slate-800 focus:outline-none  focus:ring-slate-300 font-medium rounded-md px-5 py-2.5 text-center mb-2 dark:bg-slate-600 dark:hover:bg-slate-700 dark:focus:ring-slate-900 mt-3`}>
-                        {`Create New ${(props.tableName)}`}
-                    </button> 
-                </div>
-                { !tableHeader.loading && !tableContent?.loading ? 
-                <div className={`h-3/4 wfull border-2 border-slate-900 overflow-scroll scrollbar scrollbar-track-slate-300 scrollbar-thumb-slate-700 mt-1 ${openForm ? `blur` : ''}`}>
-                    <table className="table-auto h-screen w-full mr-4">
-                        <thead className='sticky top-0 shadow-md' >
-                            <tr className="text-xl">
-                                { showHeader(tableHeader.data) }
-                            </tr>
-                        </thead>
-                        <tbody className=''>
-                            { showRows(tableContent.data) }
-                        </tbody>
-                    </table>
-                </div> : `Loading ${props.tableName}...` }
-            </div>
-            { openForm ?
-                <div className="absolute flex justify-center items-center w-full h-fit">
-                    { (!tableHeader.loading && !tableHeader.error) ? (
-                        <Form tableName={ props.tableName } header={ tableHeader.data } reloadTable={ reloadTable } setOpenForm={ setOpenForm }/>
-                    ) : <h1>Loading...</h1>}
-                </div>
-            : false}
-        </div>
-        )
+        <table ref={tableRef} className={`table-auto w-full ${ props.aS ? 'mr-4 mb-4' : '' }`}>
+            <thead className='sticky top-[-1px]' >
+                <tr className="text-xl">
+                    { showHeader(tableHeader.data) }
+                </tr>
+            </thead>
+            <tbody className='h-fit'>
+                { showRows(tableContent.data) }
+            </tbody>
+        </table>
+    )
 }
 
 export default Table

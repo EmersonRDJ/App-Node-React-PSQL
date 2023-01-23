@@ -20,7 +20,10 @@ export const { setData, setLoading, setError } = tableHeaderSlice.actions;
 
 export const fetchHeaderData = (param) => async (dispatch) => {
   try {
-    const res = await fetch(`${global.backendUrl}/table/infos/${param}/`, { method: 'GET' });
+    console.log('param', param)
+    const res = await fetch(`http://localhost:8088/table/infos/${param}/`, { method: 'GET' });
+    // console.log('backendUrl', global.backendUrl)
+    // console.log('backendUrl2', window.backendUrl)
     const data = await res.json();
     dispatch(setData(data));
   } catch (err) {
