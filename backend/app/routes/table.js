@@ -15,6 +15,7 @@ const signs = [`=`,`!=`,`<`,`>`,`LIKE`];
 // Get all tables column names and informations
 router.get('/infos', (req, res, next) => {
     client.query("SELECT ddmtab as name FROM ddm",
+    // client.query("SELECT ddmtab as name FROM ddm",
         (err, result) => {
             if (err) next(err);
             res.send(result.rows);
@@ -68,10 +69,7 @@ router.post('/:name/sort', (req, res, next) => {
     const { params } = req.body;
 
     getTableInfo({ name }).then((result) => {
-        console.log(`SELECT * FROM ${ name } WHERE ${params.map((param, i) => {
-                                                return `${param.columnName}::text LIKE('${param.value}') ${i !== params.length - 1 ? 'AND ' : ''}`
-                                            }).join('')}`)
-        console.log(params.map(param => {return param.value}))
+        console.log(params)
         if(compareArrays(params.map(param => {return param.columnName}), result.map(e => {return e.name}))){
             client.query(
                 `SELECT * FROM ${ name } WHERE ${params.map((param, i) => {
@@ -91,22 +89,19 @@ router.post('/:name/sort', (req, res, next) => {
 // Insert new row in the table  
 router.post('/:name', (req, res, next) => {
     const { name } = req.params;
-    const body = req.body;
+    const { form } = req.body;    
 
-    delete body.id;
-
-    console.log(`body`, body);
+    console.log(`ta no insert`)
 
     const newBody = Object.fromEntries(
-        Object.entries(body).filter(([key, value]) => value)
+        Object.entries(form).filter(([key, value]) => value)
     ); 
     
-    console.log(`body 2`, newBody); 
     const columns = Object.keys(newBody);
     const values = Object.values(newBody);
     
     getTableInfo({ name }).then((result) => {
-        if(compareArrays(columns, result.map(e => {return e.name}))){
+        if(compareArrays(columns, result.map(e => {return e.colname}))){
             const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
             const columnString = columns.map(column => `"${column}"`).join(', ');
 
@@ -125,41 +120,33 @@ router.post('/:name', (req, res, next) => {
 });
 
 // Update a row in a table using it's Id as reference
-router.put('/:name/:id', (req, res, next) => {
-    const { name, id } = req.params;
-    const body = req.body;
-    
+router.put('/:name/', (req, res, next) => {
+    const { name } = req.params;
+    const { form, pks } = req.body;
+
     const newBody = Object.fromEntries(
-        Object.entries(body).filter(([key, value]) => value)
-    ); 
+        Object.entries(form).filter(([key, value]) => value !== null)
+    );
 
-    console.log(`body 2`, newBody); 
     const columns = Object.keys(newBody);
-    const values = [ ...Object.values(newBody), id];
+    const pkColumns = Object.keys(pks);
+    const values = [ ...Object.values(newBody), ...Object.values(pks) ];
 
-    console.log('veio aqui')
-    console.log('columns', columns)
-    console.log('values', values)
-    
     getTableInfo({ name }).then((result) => {
-        console.log('veio2')
-        console.log('aqui',result.map(e => {return e.name}))
         // Compara as colunas enviadas com as disponiveis na tabela, se existirem a query é executada.
-        if(compareArrays(columns, result.map(e => {return e.name}))){
+        if(compareArrays(columns.concat(pkColumns), result.map(e => {return e.colname}))){
             // Configura uma string para os updates em cada coluna, por exemplo: 'coluna1=$1, coluna2=$2'
             const columnString = columns.map((e, i) => `"${e}"=$${i + 1}`).join(', ');
-            // console.log('columnString', columnString)
-            // console.log('UPDATE ${ name } SET ${ columnString } WHERE id=$${columns.length+1}')
-            // console.log(values)
+            const pkColumnString = pkColumns.map((e, i) => `"${e}"=$${i + columns.length + 1}`).join(' AND ');
         
             // res.send('foi: '+ columnString)
             client.query(
-                `UPDATE "${ name }" SET ${ columnString } WHERE ddmidy=$${columns.length+1}`,
+                // `UPDATE ${ name } SET ${ columnString } WHERE id=$${columns.length+1}`,
+                `UPDATE ${ name } SET ${ columnString } WHERE ${ pkColumnString }`,
                 values,
                 (err, result) => {
-                    console.log('result', result)
                     if (err) throw err;
-                    res.send(`Item ${id} updated`);
+                    res.send(`Item updated`);
                 }
             );
         }else{
@@ -188,7 +175,17 @@ router.delete('/:name/:id', (req, res, next) => {
 // Get information from the postgres table schema, using the table's name and getting it's column's name, data type and maximum character length
 function getTableInfo({ name }){
     return new Promise((resolve, reject) => {
-        client.query(`SELECT column_name AS name, data_type AS type, character_maximum_length AS maxChar FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1`,
+        client.query(`SELECT 
+                        ddicpo AS colName, 
+                        ddihlp AS exhName, 
+                        (SELECT ddttip FROM ddt WHERE ddtidy::VARCHAR = ddi.dditip) AS colType, 
+                        dditam AS colSize, 
+                        ddiipk AS colPk, 
+                        ddisle AS colSle, 
+                        ddiqct AS colTam,
+                        ddipqa AS colApr,
+                        ddireq AS colReq
+                        FROM ddi WHERE ddmidy = (SELECT ddmidy FROM ddm WHERE ddmtab = $1) ORDER BY ddicol`,
             [name], 
             (err, result) => {
                 if (err) reject(err);

@@ -1,96 +1,76 @@
 // React
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 
 // Font Awesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons'
 
 // Redux
-import { useSelector, useDispatch } from 'react-redux'
-
-// Redux actions
-import { setData as setTableContentData } from '../redux/slices/tableContentSlice'
+import { useSelector } from 'react-redux'
 
 const Table = props => {
-    const tableRef = useRef(null);
+    // const [headerLoading, setHeaderLoading] = useState(true)
+    // const [contentLoading, setContentLoading] = useState(true)
+    // const [loading, setLoading] = useState(true)
 
     // Redux state
-    const dispatch = useDispatch(); 
     const tableContent = useSelector(state => state.tableContent)
     const tableHeader = useSelector(state => state.tableHeader)
-    
-    // Component state
-    const [currDir, setCurrDir] = useState(`asc`)
-    const [currProp, setCurrProp] = useState(tableHeader.data[0].name)
 
-    console.log(tableHeader.data[0].name)
 
-    // Sort rows when clicking on the header property
-    function sortRows({ property = currProp, direction = currDir, newTableContent = tableContent, changeDir=true }) {
-        if(changeDir){
-            if(currProp === property){
-                direction = direction === `asc` ? `desc` : `asc`
-            }
-            else {
-                direction = `asc`
-            }
-        }
-        setCurrDir(direction)
-        setCurrProp(property);
-        const sortedRows = [...newTableContent.data].sort((a, b) => {
-            if (a[property] < b[property] || a[property] === null && b[property] !== null) {
-                return direction === `asc` ? -1 : 1;
-            } else if (a[property] > b[property] || a[property] !== null && b[property] === null) {
-                return direction === `asc` ? 1 : -1;
-            } else {
-                return 0;
-            }
-        });
-        dispatch(setTableContentData(sortedRows));
-    }
+    // useEffect(()=> {
+    //     if(!headerLoading && !contentLoading)
+    //         setLoading(false)
+    // },[headerLoading, contentLoading])
 
     // Render header
-    function showHeader(infos) {
-        if(infos){
-            return (
-                infos.map((info) => (
-                    <th onClick={() => sortRows({ property:info.name })}className={`px-2 py-4 cursor-pointer row text-left p-4 ${ currProp === info.name ? `bg-slate-500` : `bg-slate-400`}`} key={info.name}>
-                        <span className="flex flex-shrink-0 row">
-                            <span className="mx-1 text-[2.5vh]">{ info.name }</span>
-                            <span className="mx-1 text-[2.5vh]">{currProp === info.name ? <FontAwesomeIcon icon={ currDir === `asc` ? faSortDown : faSortUp }/> : <FontAwesomeIcon icon={faSort}/> }</span>
+    function showHeader() {
+        if(tableHeader.data){
+            const header = (
+                tableHeader.data.map((col) => (
+                    col.colapr ?
+                    <th className={`border-x-2 border-slate-500 p-0 pl-2 row text-left ${ props.currProp === col.colname ? `bg-slate-600 text-white` : `bg-slate-400 text-black`}`} key={col.colname}>
+                        <span className="flex row items-center justify-between">
+                            <span className="mx-1 text-[2.2vh] whitespace-nowrap">{ col.exhname || col.colname }</span>
+                            <span onClick={() => props.sortRows({ property:col.colname })} className="cursor-pointer text-[2.2vh] p-3 bg-slate-500">{ props.currProp === col.colname ? <FontAwesomeIcon icon={ props.currDir === `asc` ? faSortDown : faSortUp }/> : <FontAwesomeIcon icon={faSort}/> }</span>
                         </span>
                     </th>
+                    : false
                 ))
             );
+            return header;
         }
     }
 
     // Render table body
-    function showRows(contents) {
-        if(contents){
-            return (
-              contents.map((content, i) => (
-                <tr key={content.id} className={`${i%2 === 0 ? 'bg-slate-200' : 'bg-slate-100'} text-l h-fit`} onDoubleClick={() => {props.setForm(content); props.setOpenForm(true)}}>
-                    {tableHeader.data.map((key) => (
-                        <td className="text-[2vh] border-b-2 border-slate-400 text-left p-3 max-w-screen-sm break-words" key={key.name}>
-                            {String(content[key.name])}
+    function showRows() {
+        if(tableContent.data){
+            const content = (
+              tableContent.data.map((content, i) => (
+                <tr key={`row-${i}`} className={`${i%2 === 0 ? 'bg-slate-200' : 'bg-slate-100'} text-l h-fit border-b-2 border-slate-400 `} onDoubleClick={() => {props.setForm(content); props.setOpenForm(true)}}>
+                    {tableHeader.data.map((col, j) => (
+                    col.colapr ?
+                        <td key={`${col.colname}-${j}`} className="text-[2vh] border-x-2 border-slate-500 text-left p-3 break-words">
+                            { String(content[col.colname]) }
                         </td>
+                    : false
                     ))}
                 </tr>
               ))
             );
+            return content;
         }
     }
     
     return(
-        <table ref={tableRef} className={`table-auto w-full ${ props.aS ? 'mr-4 mb-4' : '' }`}>
+        <table className={`table-auto w-full ${ props.activeVScroll ? 'mr-4' : '' } ${ props.activeHScroll ? 'mb-4' : '' }`} >
             <thead className='sticky top-[-1px]' >
                 <tr className="text-xl">
-                    { showHeader(tableHeader.data) }
+                    { showHeader() }
                 </tr>
             </thead>
             <tbody className='h-fit'>
-                { showRows(tableContent.data) }
+                { showRows() }
             </tbody>
         </table>
     )

@@ -20,7 +20,6 @@ export const { setData, setLoading, setError } = tableContentSlice.actions;
 
 export const fetchContentData = (param) => async (dispatch) => {
   try {
-    console.log('param 2', param)
     const res = await fetch(`http://localhost:8088/table/${param}/`, { method: 'GET' });
     const data = await res.json();
     dispatch(setData(data));

@@ -20,6 +20,11 @@ const Tables = props => {
 
     const router = useRouter()
 
+    // Set the tab name
+    useEffect(() => {
+        document.title = `Tabelas`;
+    }, [])
+
     // Fetch data and set it to the redux's state
     useEffect(() =>{
         dispatch(fetchTablesData())
@@ -31,10 +36,9 @@ const Tables = props => {
             <div className={`border-4 border-slate-900 bg-slate-500 w-4/6 h-5/6 py-8 pr-4 overflow-auto scrollbar scrollbar-track-slate-700 scrollbar-thumb-slate-300
                             min-w-fit max-md:w-full max-md:h-full`}>
                 { tables.data.map((table) => (
-                    // <Link key={table.name} href={`/navigator/Table`} as={`table/${table.name}`} onClick={() => {dispatch(setCurrTableData(table.name))}} >
-                    <Link key={table.name} href={`table/${table.name}`} onClick={() => {dispatch(setCurrTableData(table.name))}} >
+                    <Link key={table.name} className="cursor-default" href={`table/${table.name}`} onClick={() => {dispatch(setCurrTableData(table.name))}} >
                         <li key={table.name} className="list-none">
-                            <div className=" bg-slate-700 text-slate-300 hover:bg-slate-900 hover:cursor-pointer text-[5vh] mx-10 my-3 px-8 py-4 rounded-2xl">
+                            <div className="cursor-pointer bg-slate-700 text-slate-300 hover:bg-slate-900 hover:cursor-pointer text-[5vh] mx-10 my-3 px-8 py-4 rounded-2xl">
                                 { global.stringFirstToUpper(table.name) }
                             </div>
                         </li>
